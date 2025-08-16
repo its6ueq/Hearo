@@ -1,5 +1,0 @@
-soundcard
-numpy
-faster-whisper
-torch
-torchaudio
