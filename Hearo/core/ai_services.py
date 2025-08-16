@@ -3,13 +3,32 @@ from collections import Counter
 import spacy
 from threading import Lock
 from .keyword_extractor import KeywordExtractor
+from .search_engine import get_info_for_keyword
 
-# --- Load spaCy 1 lần, tối ưu tốc độ ---
-# Tắt parser (không cần noun_chunks), giữ NER + lemmatizer
-nlp = spacy.load("en_core_web_sm", exclude=["parser"])
-# Sentencizer để có doc.sents khi parser bị tắt
-if "sentencizer" not in nlp.pipe_names and "senter" not in nlp.pipe_names:
-    nlp.add_pipe("sentencizer")
+import spacy_stanza, stanza
+stanza.download('vi')
+
+_PIPE_CACHE = {}
+
+def make_nlp(lang: str = "en"):
+    lang = (lang or "en").lower()
+    if lang in _PIPE_CACHE:
+        return _PIPE_CACHE[lang]
+
+    if lang.startswith("en"):
+        # Tắt parser để nhanh (vì extractor dùng matcher)
+        nlp = spacy.load("en_core_web_sm", exclude=["parser"])
+        if "sentencizer" not in nlp.pipe_names and "senter" not in nlp.pipe_names:
+            nlp.add_pipe("sentencizer")
+    elif lang.startswith("vi"):
+        nlp = spacy_stanza.load_pipeline("vi")
+    else:
+        raise ValueError(f"Unsupported language: {lang}")
+
+    _PIPE_CACHE[lang] = nlp
+    return nlp
+
+nlp = make_nlp("vi")
 
 # Khởi tạo extractor (tối ưu cho streaming)
 ke = KeywordExtractor(
@@ -51,5 +70,6 @@ def extract_keywords_from_text(
             print(f"AI Service: Top keywords -> {keywords}")
             return keywords
 
-def get_info_for_keyword(keyword: str) -> str:
+def get_info_for_keyword_ui(keyword: str) -> str:
     print(f"AI Service: Lấy thông tin cho '{keyword}'")
+    return get_info_for_keyword(keyword, lang="vi")  # hoặc "vi"
