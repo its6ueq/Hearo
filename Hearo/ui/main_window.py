@@ -10,28 +10,11 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 from ..styles.main_styles import UIStyles, WebViewStyles
 
 class WorkerSignals(QObject):
-    '''
-    Defines the signals available from a running worker thread.
-    Supported signals are:
-    
-    finished
-        No data
-    
-    error
-        `tuple` (exctype, value, traceback.format_exc())
-    
-    result
-        `object` data returned from processing, anything
-    '''
     finished = Signal()
     error = Signal(tuple)
     result = Signal(object)
 
 class Worker(QRunnable):
-    '''
-    Worker thread
-    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
-    '''
     def __init__(self, fn, *args, **kwargs):
         super(Worker, self).__init__()
         self.fn = fn
@@ -197,14 +180,12 @@ class KeywordButton(ModernButton):
     keyword_clicked = Signal(str)
     
     def __init__(self, keyword, parent=None):
-        # Không cần gọi super() của ModernButton vì chúng ta sẽ ghi đè style
         QPushButton.__init__(self, keyword, parent)
         self.keyword = keyword
         self.setFixedHeight(28)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.clicked.connect(lambda: self.keyword_clicked.emit(self.keyword))
         
-        # Style mới - khớp với hình ảnh gốc
         self.setStyleSheet("""
             QPushButton {
                 background-color: #5865F2; /* Màu xanh tím của Discord */
@@ -274,18 +255,14 @@ class ModernWebView(QWebEngineView):
         self.page().setBackgroundColor(Qt.GlobalColor.transparent)
 
     def setup_link_handling(self):
-        # Hàm này bắt các yêu cầu điều hướng (như click vào link)
         page = self.page()
         original_accept = page.acceptNavigationRequest
         
         def handle_navigation_request(url, nav_type, is_main_frame):
-            # Nếu hành động là bấm vào một link
             if nav_type == QWebEnginePage.NavigationType.NavigationTypeLinkClicked:
-                # Dùng QDesktopServices để mở link bằng trình duyệt mặc định của hệ thống
                 QDesktopServices.openUrl(url)
-                return False  # Ngăn WebView tự điều hướng bên trong
+                return False  
             
-            # Cho phép các hành động khác (như tải trang ban đầu)
             return original_accept(url, nav_type, is_main_frame)
         
         page.acceptNavigationRequest = handle_navigation_request
@@ -337,13 +314,11 @@ class ResizableOverlayWindow(QWidget):
         self.display_lines = []
         self.keywords = []
 
-        # Configuration
         self.min_width = getattr(config.ui, 'min_width', 320) if config else 320
         self.max_width = getattr(config.ui, 'max_width', 600) if config else 600
         self.min_height = getattr(config.ui, 'min_height', 120) if config else 120
         self.expanded_height = getattr(config.ui, 'expanded_height', 500) if config else 500
 
-        # Window setup
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint | 
             Qt.WindowType.WindowStaysOnTopHint | 
@@ -358,22 +333,18 @@ class ResizableOverlayWindow(QWidget):
         self.position_window()
         self._drag_pos = QPoint()
         
-        # Animation setup
         animation_duration = getattr(config.ui, 'animation_duration', 300) if config else 300
         self.resize_animation = QPropertyAnimation(self, b"geometry")
         self.resize_animation.setDuration(animation_duration)
         self.resize_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         
     def _init_ui(self):
-        # Main layout
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         
-        # Main container with shadow effect
         self.main_container = QFrame()
         self.main_container.setObjectName("mainContainer")
         
-        # Add shadow effect
         shadow = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(20)
         shadow.setColor(QColor(0, 0, 0, 80))
@@ -387,12 +358,10 @@ class ResizableOverlayWindow(QWidget):
         self._create_header(container_layout)
         self._create_sections()
         
-        # Setup splitter
         self._setup_splitter(container_layout)
         
         self.main_layout.addWidget(self.main_container)
         
-        # Size grip
         self.size_grip = QSizeGrip(self)
         
         self.apply_modern_stylesheet()
@@ -402,11 +371,9 @@ class ResizableOverlayWindow(QWidget):
         header_layout = QHBoxLayout()
         header_layout.setSpacing(8)
         
-        # Title with icon
         title_container = QHBoxLayout()
         title_container.setSpacing(8)
         
-        # App icon
         self.app_icon = QLabel("🎧")
         self.app_icon.setStyleSheet("""
             QLabel {
@@ -449,7 +416,6 @@ class ResizableOverlayWindow(QWidget):
         parent_layout.addLayout(header_layout)
 
     def _create_sections(self):
-        # Text section
         self.text_section_widget = self._create_section_widget(
             "textSection", "📝 Live Transcription"
         )
@@ -458,9 +424,6 @@ class ResizableOverlayWindow(QWidget):
         self.text_display.setReadOnly(True)
         self.text_section_widget.layout().addWidget(self.text_display)
 
-        # Keywords section
-        # DÁN KHỐI CODE NÀY VÀO THAY THẾ
-        # Keywords section
         self.keywords_section_widget = self._create_section_widget(
             "keywordsSection", "🔖 Keywords"
         )
@@ -469,31 +432,23 @@ class ResizableOverlayWindow(QWidget):
         scroll_area.setObjectName("keywordsScroll")
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        # Widget container chính, sẽ được scroll area quản lý kích thước
         main_container = QWidget()
 
-        # 1. Dùng một QVBoxLayout để ràng buộc chiều rộng và thêm margins
         v_layout = QVBoxLayout(main_container)
 
-        # 2. Thêm khoảng cách lề: setContentsMargins(trái, trên, phải, dưới)
-        #    Thêm 8px lề trái và 4px lề trên.
         v_layout.setContentsMargins(4, 4, 4, 4)
         v_layout.setSpacing(0)
 
-        # Widget chứa FlowLayout (để FlowLayout không áp dụng trực tiếp lên container chính)
         flow_widget = QWidget()
 
-        # 3. Khởi tạo FlowLayout, có thể giữ spacing cũ hoặc điều chỉnh nếu muốn
         self.keywords_layout = FlowLayout(flow_widget, margin=0, spacing=8) 
 
-        # Thêm widget chứa FlowLayout vào layout dọc
         v_layout.addWidget(flow_widget)
-        v_layout.addStretch(1) # Đảm bảo các keyword dồn lên trên
+        v_layout.addStretch(1) 
 
         scroll_area.setWidget(main_container)
         self.keywords_section_widget.layout().addWidget(scroll_area)
 
-        # Info section
         self.info_section_widget = self._create_section_widget(
             "infoSection", "🤖 AI Information"
         )
@@ -511,7 +466,6 @@ class ResizableOverlayWindow(QWidget):
         section_layout.setContentsMargins(0, 0, 0, 0)
         section_layout.setSpacing(8)
         
-        # Section title
         title_label = QLabel(title)
         title_label.setObjectName("sectionTitle")
         section_layout.addWidget(title_label)
@@ -519,7 +473,6 @@ class ResizableOverlayWindow(QWidget):
         return section_widget
     
     def _setup_splitter(self, container_layout):
-        # Inner splitter for keywords and info
         inner_splitter = QSplitter(Qt.Orientation.Vertical)
         inner_splitter.setChildrenCollapsible(False)
         inner_splitter.addWidget(self.keywords_section_widget)
@@ -527,7 +480,6 @@ class ResizableOverlayWindow(QWidget):
         inner_splitter.setSizes([100, 200])
         inner_splitter.setStretchFactor(1, 1)
 
-        # Main splitter
         self.splitter = QSplitter(Qt.Orientation.Vertical)
         self.splitter.setChildrenCollapsible(False)
         self.splitter.addWidget(self.text_section_widget)
@@ -538,12 +490,9 @@ class ResizableOverlayWindow(QWidget):
         container_layout.addWidget(self.splitter)
     
     def apply_modern_stylesheet(self):
-        # Use existing UIStyles with modern enhancements
         existing_styles = UIStyles.get_combined_stylesheet()
         
-        # Add modern Discord-like enhancements while preserving original design
         modern_enhancements = """
-            /* Enhanced main container with better gradient */
             #mainContainer {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 rgba(40, 44, 52, 0.95),
@@ -552,7 +501,6 @@ class ResizableOverlayWindow(QWidget):
                 border-radius: 15px;
             }
             
-            /* Enhanced section titles */
             #sectionTitle {
                 color: #1E88E5; 
                 font-weight: 600;
@@ -563,13 +511,11 @@ class ResizableOverlayWindow(QWidget):
                 padding: 0px;
             }
             
-            /* Better hover effects for buttons */
             #expandBtn:hover, #controlBtn:hover {
                 background: rgba(30, 136, 229, 0.3);
                 border: 1px solid rgba(30, 136, 229, 0.5);
             }
             
-            /* Enhanced text display */
             #textDisplay {
                 background: rgba(0, 0, 0, 0.4);
                 border-radius: 8px;
@@ -586,9 +532,9 @@ class ResizableOverlayWindow(QWidget):
         self.setStyleSheet(combined_styles)
 
     def _run_collapse_animation(self):
-        header_height = 60  # Approximate header height
-        keywords_height = 120  # Fixed keywords section height
-        margins = 40  # Total margins
+        header_height = 60  
+        keywords_height = 120 
+        margins = 40 
         
         target_height = header_height + keywords_height + margins
         target_height = max(target_height, self.min_height)
@@ -625,7 +571,6 @@ class ResizableOverlayWindow(QWidget):
                 self.setGeometry(*saved_geo)
                 return
         
-        # Default positioning
         screen_geo = QApplication.primaryScreen().geometry()
         margin = 20
         default_width = getattr(self.config.ui, 'default_width', 400) if self.config else 400
@@ -639,7 +584,6 @@ class ResizableOverlayWindow(QWidget):
         )
 
     def add_keywords(self, keywords_list):
-        # Clear existing keywords
         while self.keywords_layout.count():
             child = self.keywords_layout.takeAt(0)
             if child.widget():
@@ -668,14 +612,12 @@ class ResizableOverlayWindow(QWidget):
         is_expanded = self.height() > (self.min_height + self.expanded_height) / 2
 
         if is_expanded:
-            # Collapse
             self.expand_btn.setIcon(qta.icon('fa5s.expand-arrows-alt', color='#DCDDDE'))
             self.text_section_widget.setVisible(False)
             self.info_section_widget.setVisible(False)
             self.keywords_section_widget.setVisible(True)
             QTimer.singleShot(0, self._run_collapse_animation)
         else:
-            # Expand
             self.expand_btn.setIcon(qta.icon('fa5s.compress-arrows-alt', color='#DCDDDE'))
             self.text_section_widget.setVisible(True)
             self.info_section_widget.setVisible(True)
@@ -700,14 +642,12 @@ class ResizableOverlayWindow(QWidget):
             self.keyword_callback(keyword)
 
     def update_ai_info(self, html_content):
-    # Đoạn mã này bọc nội dung HTML của bạn bằng style và script xử lý click
         enhanced_wrapper = f"""
         <html>
         <head>
             {WebViewStyles.get_dark_theme_wrapper()}
             <script>
                 document.addEventListener('DOMContentLoaded', function() {{
-                    // Tìm tất cả các thẻ <a> có thuộc tính href
                     var links = document.querySelectorAll('a[href]');
                     links.forEach(function(link) {{
                         link.style.cursor = 'pointer';
@@ -719,7 +659,6 @@ class ResizableOverlayWindow(QWidget):
                         }});
                     }});
                     
-                    // Xử lý tương tự cho ảnh, nếu bạn muốn bấm vào ảnh cũng mở ra trình duyệt
                     var images = document.querySelectorAll('img[src]');
                     images.forEach(function(img) {{
                         img.style.cursor = 'pointer';

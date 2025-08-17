@@ -8,15 +8,11 @@ from cachetools import TTLCache
 import feedparser
 
 try:
-    # tăng độ chính xác so khớp tiếng Việt & unicode
     from unidecode import unidecode
 except Exception:
-    def unidecode(x): return x  # fallback nếu chưa cài
+    def unidecode(x): return x  
 
-# =======================
-# Config
-# =======================
-DEFAULT_LANG = "en"          # 'vi' nếu muốn mặc định tiếng Việt
+DEFAULT_LANG = "en"         
 DEFAULT_NEWS_HL = "en"
 DEFAULT_NEWS_GL = "US"
 DEFAULT_NEWS_CEID = "US:en"
@@ -38,9 +34,6 @@ GOOGLE_NEWS_RSS    = "https://news.google.com/rss/search?q={q}&hl={hl}&gl={gl}&c
 DDG_IA             = "https://api.duckduckgo.com/?q={q}&format=json&no_html=1&skip_disambig=1"
 WIKT_DEF           = "https://en.wiktionary.org/api/rest_v1/page/definition/{term}"
 
-# =======================
-# Utils
-# =======================
 def _now_iso() -> str:
     return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
@@ -79,7 +72,6 @@ def _pick_first(items: List[Dict[str, Any]], n: int) -> List[Dict[str, Any]]:
         if len(out) >= n: break
     return out
 
-# Robust HTTP
 async def _get_json(session: aiohttp.ClientSession, url: str, **kw) -> Optional[Dict[str, Any]]:
     try:
         async with session.get(url, timeout=10, **kw) as r:
@@ -98,12 +90,7 @@ async def _get_text(session: aiohttp.ClientSession, url: str, **kw) -> Optional[
         return None
     return None
 
-# =======================
-# Definitions (multi-fallback)
-# =======================
 async def fetch_wikipedia_summary(session: aiohttp.ClientSession, keyword: str, lang: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
-    """Trả (summary, canonical_title) hoặc (None, None). Nếu miss, thử search để lấy title chuẩn."""
-    # attempt direct
     url = WIKI_SUMMARY.format(lang=lang, title=_quote(keyword.replace(" ", "_")))
     data = await _get_json(session, url)
     if data and data.get("title"):
@@ -113,7 +100,6 @@ async def fetch_wikipedia_summary(session: aiohttp.ClientSession, keyword: str, 
             "url": (data.get("content_urls") or {}).get("desktop", {}).get("page"),
             "thumbnail": (data.get("thumbnail") or {}).get("source"),
         }, data.get("title"))
-    # search then summary
     s_url = WIKI_SEARCH.format(lang=lang, q=_quote(keyword))
     s = await _get_json(session, s_url)
     lst = (s or {}).get("pages") or (s or {}).get("results") or []
@@ -175,13 +161,9 @@ async def fetch_ddg_instant_answer(session: aiohttp.ClientSession, keyword: str)
         return {"title": data.get("Heading") or keyword, "extract": abstract, "url": link, "thumbnail": img}
     return None
 
-# =======================
-# Images (relevance-first + scoring)
-# =======================
 async def fetch_wikipedia_images(session: aiohttp.ClientSession, canonical_title: str, lang: str, max_images: int) -> List[Dict[str, Any]]:
     out: List[Dict[str, Any]] = []
 
-    # a) page thumbnail
     pi_url = WIKI_PAGEIMAGES.format(lang=lang, title=_quote(canonical_title.replace(" ", "_")))
     pi = await _get_json(session, pi_url)
     try:
@@ -193,7 +175,6 @@ async def fetch_wikipedia_images(session: aiohttp.ClientSession, canonical_title
     except Exception:
         pass
 
-    # b) Commons search
     cms_url = COMMONS_MEDIASEARCH.format(n=max_images, q=_quote(canonical_title))
     cms = await _get_json(session, cms_url)
     try:
@@ -221,7 +202,6 @@ def _score_image(keyword: str, cand: Dict[str, Any]) -> float:
         if kw_norm == title_norm: score += 3.0
         if f" {kw_norm} " in f" {title_norm} ": score += 2.0
         score += 2.5 * _jaccard(kw_tokens, _tokenize(title))
-    # ưu tiên nguồn đáng tin
     src = (cand.get("source") or "").lower()
     if "wikipedia" in src or "wikimedia" in src or "commons" in src:
         score += 1.5
@@ -246,16 +226,12 @@ async def fetch_openverse_images(session: aiohttp.ClientSession, keyword: str, m
                 })
         return res
 
-    # 1) title=
     out.extend(await call({"title": keyword, "mature": "false", "page_size": max_images}))
-    # 2) q="keyword"
     if len(out) < max_images:
         out.extend(await call({"q": f"\"{keyword}\"", "mature": "false", "page_size": max_images}))
-    # 3) q=keyword
     if len(out) < max_images:
         out.extend(await call({"q": keyword, "mature": "false", "page_size": max_images}))
 
-    # chấm điểm + lọc theo ngưỡng
     scored = []
     for it in out:
         if not it.get("thumbnail"): 
@@ -265,13 +241,9 @@ async def fetch_openverse_images(session: aiohttp.ClientSession, keyword: str, m
         scored.append(it)
 
     scored.sort(key=lambda x: x["relevance"], reverse=True)
-    # Ngưỡng tối thiểu; nếu keyword quá hiếm, vẫn trả vài ảnh đầu
     filtered = [x for x in scored if x["relevance"] >= 1.5] or scored[:max_images]
     return _pick_first(filtered, max_images)
 
-# =======================
-# News (time-bounded & exact)
-# =======================
 async def fetch_google_news(session: aiohttp.ClientSession, keyword: str, *, max_items: int,
                             hl: str, gl: str, ceid: str, window_days: int = NEWS_WINDOW_DAYS) -> List[Dict[str, Any]]:
     key = _cache_key("news", keyword.lower(), str(max_items), hl, gl, ceid, str(window_days))
@@ -297,9 +269,6 @@ async def fetch_google_news(session: aiohttp.ClientSession, keyword: str, *, max
     cache[key] = out
     return out
 
-# =======================
-# Aggregator
-# =======================
 async def fetch_keyword_info(keyword: str, *, lang: str = DEFAULT_LANG,
                              max_images: int = 6, max_news: int = 6) -> Dict[str, Any]:
     kw = _norm_kw(keyword)
@@ -307,7 +276,6 @@ async def fetch_keyword_info(keyword: str, *, lang: str = DEFAULT_LANG,
         return {"keyword": keyword, "lang": lang, "fetched_at": _now_iso(), "definition": None, "images": [], "news": []}
 
     async with aiohttp.ClientSession(headers={"User-Agent": UA}) as session:
-        # Definitions (song song)
         wiki_task = fetch_wikipedia_summary(session, kw, lang=lang)
         ddg_task  = fetch_ddg_instant_answer(session, kw)
         wikt_task = fetch_wiktionary_definition(session, kw)
@@ -321,11 +289,9 @@ async def fetch_keyword_info(keyword: str, *, lang: str = DEFAULT_LANG,
         if isinstance(wikt, Exception): wikt = None
         if isinstance(wd, Exception): wd = None
 
-        # Ưu tiên: Wikipedia → Wikidata → DuckDuckGo → Wiktionary
         final_def = definition or wd or ddg or wikt
         canonical_title = canonical or (final_def.get("title") if final_def else None)
 
-        # Images
         images: List[Dict[str, Any]] = []
         if canonical_title:
             imgs_wp = await fetch_wikipedia_images(session, canonical_title, lang, max_images)
@@ -335,7 +301,6 @@ async def fetch_keyword_info(keyword: str, *, lang: str = DEFAULT_LANG,
             images.extend(imgs_ov)
         images = _pick_first(images, max_images)
 
-        # News
         news = await fetch_google_news(
             session, kw, max_items=max_news,
             hl=("vi" if lang.startswith("vi") else DEFAULT_NEWS_HL),
@@ -354,9 +319,6 @@ async def fetch_keyword_info(keyword: str, *, lang: str = DEFAULT_LANG,
             "meta": {"canonical_title": canonical_title}
         }
 
-# =======================
-# HTML renderer
-# =======================
 def render_keyword_html(payload: Dict[str, Any]) -> str:
     kw = html.escape(payload.get("keyword", ""))
     defn = payload.get("definition") or {}
@@ -403,17 +365,12 @@ def render_keyword_html(payload: Dict[str, Any]) -> str:
     """
     return html_out
 
-# =======================
-# Async & Sync API
-# =======================
 async def aget_info_for_keyword(keyword: str, lang: str = DEFAULT_LANG) -> str:
     data = await fetch_keyword_info(keyword, lang=lang)
     return render_keyword_html(data)
 
-# ---- Robust sync runner (fix Windows "Event loop is closed") ----
 class _AsyncLoopRunner:
     def __init__(self):
-        # Khuyến nghị dùng Selector loop để tránh Proactor warning
         if sys.platform.startswith("win"):
             try:
                 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type: ignore[attr-defined]

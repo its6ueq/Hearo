@@ -46,7 +46,7 @@ class TranscriptionEngine:
                 raise Exception("No suitable audio device found")
                 
         except Exception as e:
-            print(f"❌ Audio setup error: {e}")
+            print(f"Audio setup error: {e}")
             raise e
     
     def setup_model(self, model_size, device, compute_type):

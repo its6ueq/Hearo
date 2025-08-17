@@ -7,7 +7,7 @@ class Transcriber:
     def __init__(self, model_size, device, compute_type):
         print("Đang kiểm tra thiết bị...")
         if device.lower() == "cuda" and not torch.cuda.is_available():
-            print("⚠ CUDA không khả dụng! Chuyển sang CPU...")
+            print("CUDA không khả dụng! Chuyển sang CPU...")
             device = "cpu"
             compute_type = "int8"
         
@@ -17,7 +17,7 @@ class Transcriber:
             device=device, 
             compute_type=compute_type
         )
-        print("✓ Tải mô hình thành công!")
+        print("Tải mô hình thành công!")
         
         self.audio_buffer = np.array([], dtype=np.float32)
 
@@ -37,7 +37,7 @@ class Transcriber:
         print(f"Năng lượng trung bình của chunk âm thanh: {audio_energy:.6f}")
         
         if audio_energy < 0.01:
-            print(f"⚠️  Âm thanh quá nhỏ ({audio_energy:.6f} < 0.01), bỏ qua...")
+            print(f"Âm thanh quá nhỏ ({audio_energy:.6f} < 0.01), bỏ qua...")
             self.audio_buffer = np.array([], dtype=np.float32)
             return None
         

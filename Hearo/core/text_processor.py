@@ -63,7 +63,7 @@ class EnhancedTextProcessor:
             return "", False
 
         if self.is_duplicate(cleaned_text):
-            print(f"🔄 Duplicate detected: '{cleaned_text[:50]}...'")
+            print(f"Duplicate detected: '{cleaned_text[:50]}...'")
             return "", False
         
         self.raw_buffer.append(cleaned_text)
@@ -74,7 +74,7 @@ class EnhancedTextProcessor:
             last_sentence = self.processed_sentences[-1]
             merged, did_merge = self.merge_overlapping_texts(last_sentence, cleaned_text)
             if did_merge:
-                print("🔗 Merged overlapping text")
+                print("Merged overlapping text")
                 self.processed_sentences[-1] = merged
                 return merged, True
         

@@ -81,17 +81,14 @@ class KeywordExtractor:
         self.weight_propn = weight_propn
         self.use_lemma = use_lemma
 
-        # Trạng thái tích lũy
-        self.global_freq = Counter()     
-        self.seen = set()                
-        self.meta: Dict[str, dict] = {}  
-        self._tok_offset = 0          
+        self.global_freq = Counter()    
+        self.seen = set()
+        self.meta: Dict[str, dict] = {}
+        self._tok_offset = 0 
         self._sent_offset = 0
 
-        # Tài nguyên dựng 1 lần
         self.matcher = _build_np_matcher(nlp)
 
-        # Cache token hóa cụm để tính điểm nhanh
         self._phrase_token_cache: Dict[str, List[str]] = {}
 
     def _token_key(self, tok):
@@ -113,7 +110,6 @@ class KeywordExtractor:
         sent_id_map = _sent_index_map(doc)
         spans = []
 
-        # (A) NER (ưu tiên)
         if self.use_ner and hasattr(doc, "ents"):
             for ent in doc.ents:
                 if ent.label_ in NER_LABELS_PRIORITY:
@@ -121,12 +117,10 @@ class KeywordExtractor:
                     if len(sp):
                         spans.append(("ner", sp))
 
-        # (B) PROPN chuỗi
         for sp in _contiguous_propn_spans(doc):
             sp = _clean_edges(sp)
             if len(sp): spans.append(("propn", sp))
 
-        # (C) Cụm danh từ
         if self.use_noun_chunks and doc.has_annotation("DEP") and hasattr(doc, "noun_chunks"):
             for ch in doc.noun_chunks:
                 sp = _clean_edges(ch)
@@ -138,7 +132,6 @@ class KeywordExtractor:
                 sp = _clean_edges(sp)
                 if len(sp): spans.append(("match", sp))
 
-        # Lọc theo độ dài & trùng lặp vị trí
         seen_span = set()
         out = []
         for typ, sp in spans:
@@ -170,7 +163,6 @@ class KeywordExtractor:
             if not key: 
                 continue
 
-            # vị trí toàn cục
             tok_i_global = self._tok_offset + sp.start
             sent_id_global = self._sent_offset + sent_local
 
@@ -190,7 +182,6 @@ class KeywordExtractor:
             else:
                 pass
 
-        # tăng offset cho batch sau
         self._tok_offset += len(doc)
         try:
             last_sid = max(_sent_index_map(doc).values()) if len(doc) else -1
@@ -198,7 +189,6 @@ class KeywordExtractor:
             last_sid = -1
         self._sent_offset += (last_sid + 1)
 
-        # trả keyword mới theo thứ tự xuất hiện
         if return_new_meta:
             return sorted(new_items, key=lambda m: m["tok_i"])
         else:
@@ -207,12 +197,10 @@ class KeywordExtractor:
     def _score(self, phrase_text: str, meta: dict) -> float:
         toks = self._phrase_tokens(phrase_text)
         base = sum(self.global_freq.get(t, 0) for t in toks)
-        # ưu tiên theo thuộc tính
         if meta.get("has_propn"): 
             base *= self.weight_propn
         if meta.get("has_ner"): 
             base *= self.weight_ner
-        # nhẹ tay thưởng số token để ưu tiên cụm dài hơn một chút
         return base + 0.1 * len(toks)
 
     def get_top(self, top_k: int = 20, *, order: str = "score", return_meta: bool = False):

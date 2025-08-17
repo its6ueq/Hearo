@@ -6,21 +6,11 @@ class UIStyles:
     def get_main_window_style():
         return """
             #mainContainer {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 rgba(35, 39, 42, 0.95),
-                    stop:1 rgba(25, 28, 31, 0.95));
-                border: 1px solid rgba(255, 255, 255, 0.1);
+                background-color: #36393F;
+                border: 1px solid #202225;
                 border-radius: 12px;
-                backdrop-filter: blur(10px);
             }
-            
-            #resizeHandle {
-                background: rgba(0, 255, 136, 0.3);
-                border-radius: 2px;
-            }
-            #resizeHandle:hover {
-                background: rgba(0, 255, 136, 0.6);
-            }
+            #resizeHandle { ... }
         """
     
     @staticmethod
@@ -28,40 +18,9 @@ class UIStyles:
         return """
             #title {
                 color: #FFFFFF;
-                font-weight: bold;
-                font-size: 14px;
-            }
-            
-            #expandBtn {
-                background: rgba(255, 255, 255, 0.1);
-                border: none;
-                border-radius: 15px;
-                padding: 5px;
-                min-width: 30px;
-                max-width: 30px;
-            }
-            #expandBtn:hover {
-                background: rgba(255, 255, 255, 0.2);
-                transform: scale(1.05);
-            }
-            #expandBtn:pressed {
-                background: rgba(255, 255, 255, 0.3);
-            }
-            
-            #controlBtn {
-                background: rgba(255, 255, 255, 0.1);
-                border: none;
-                border-radius: 16px;
-                padding: 6px;
-                min-width: 32px;
-                max-width: 32px;
-            }
-            #controlBtn:hover {
-                background: rgba(255, 255, 255, 0.2);
-                transform: scale(1.05);
-            }
-            #controlBtn:pressed {
-                background: rgba(255, 255, 255, 0.3);
+                font-size: 16px;
+                font-weight: 600;
+                font-family: 'Segoe UI', Arial, sans-serif;
             }
         """
     
@@ -69,18 +28,19 @@ class UIStyles:
     def get_section_styles():
         return """
             #textSection, #keywordsSection, #infoSection {
-                background: rgba(0, 0, 0, 0.2);
-                border: 1px solid rgba(255, 255, 255, 0.05);
-                border-radius: 8px;
-                margin: 2px 0px;
+                background-color: transparent;
+                border: none;
+                padding: 8px;
             }
             
             #sectionTitle {
-                color: #00FF88;
-                font-weight: bold;
-                font-size: 13px;
-                margin: 0px 0px 5px 0px;
-                padding: 0px;
+                color: #B9BBBE;
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 4px;
+                font-family: 'Segoe UI', Arial, sans-serif;
             }
         """
     
@@ -88,18 +48,19 @@ class UIStyles:
     def get_text_display_styles():
         return """
             #textDisplay {
-                background: rgba(0, 0, 0, 0.3);
-                border-radius: 6px;
-                color: #e0e1e2;
-                font-family: 'Consolas', 'Courier New', monospace;
+                background-color: #2F3136;
+                color: #DCDDDE;
+                border: 2px solid #40444B;
+                border-radius: 8px;
+                font-family: 'Segoe UI', Arial, sans-serif;
                 font-size: 14px;
-                padding: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.05);
-                selection-background-color: rgba(0, 255, 136, 0.3);
                 line-height: 1.4;
+                padding: 8px;
+                selection-background-color: #5865F2;
             }
             #textDisplay:focus {
-                border: 1px solid rgba(0, 255, 136, 0.3);
+                border-color: #5865F2;
+                outline: none;
             }
         """
     
@@ -107,85 +68,28 @@ class UIStyles:
     def get_scrollbar_styles():
         return """
             QScrollBar:vertical {
-                background: rgba(255, 255, 255, 0.1);
+                background-color: #2F3136;
                 width: 8px;
                 border-radius: 4px;
-                margin: 0px;
+                margin: 0;
             }
             QScrollBar::handle:vertical {
-                background: rgba(255, 255, 255, 0.3);
-                border-radius: 4px;
+                background-color: #5865F2;
                 min-height: 20px;
-                margin: 2px;
+                border-radius: 4px;
             }
             QScrollBar::handle:vertical:hover {
-                background: rgba(0, 255, 136, 0.5);
+                background-color: #4752C4;
             }
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                border: none;
-                background: none;
                 height: 0px;
             }
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-                background: none;
-            }
-            
             QScrollBar:horizontal {
-                background: rgba(255, 255, 255, 0.1);
-                height: 8px;
-                border-radius: 4px;
-                margin: 0px;
-            }
-            QScrollBar::handle:horizontal {
-                background: rgba(255, 255, 255, 0.3);
-                border-radius: 4px;
-                min-width: 20px;
-                margin: 2px;
-            }
-            QScrollBar::handle:horizontal:hover {
-                background: rgba(0, 255, 136, 0.5);
-            }
-            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
-                border: none;
-                background: none;
-                width: 0px;
+                height: 0px;
             }
         """
     
-    @staticmethod
-    def get_keyword_styles():
-        return """
-            #keywordsScroll {
-                background: transparent;
-                border: none;
-                min-height: 50px;
-            }
-            
-            KeywordButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 rgba(0, 255, 136, 0.2),
-                    stop:1 rgba(0, 200, 108, 0.2));
-                border: 1px solid rgba(0, 255, 136, 0.3);
-                border-radius: 14px;
-                color: #FFFFFF;
-                font-size: 12px;
-                font-weight: 500;
-                padding: 6px 14px;
-                min-width: 60px;
-                margin: 2px;
-            }
-            KeywordButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 rgba(0, 255, 136, 0.4),
-                    stop:1 rgba(0, 200, 108, 0.4));
-                border: 1px solid rgba(0, 255, 136, 0.6);
-                transform: scale(1.05);
-            }
-            KeywordButton:pressed {
-                background: rgba(0, 255, 136, 0.6);
-                transform: scale(0.95);
-            }
-        """
+    
     
     @staticmethod
     def get_info_section_styles():
@@ -213,15 +117,16 @@ class UIStyles:
     @staticmethod
     def get_splitter_style():
         return """
+            QSplitter::handle {
+                background-color: #40444B;
+                border-radius: 2px;
+                margin: 2px;
+            }
+            QSplitter::handle:hover {
+                background-color: #5865F2;
+            }
             QSplitter::handle:vertical {
-                height: 5px;
-                background-color: rgba(255, 255, 255, 0.05);
-            }
-            QSplitter::handle:vertical:hover {
-                background-color: rgba(0, 255, 136, 0.3);
-            }
-            QSplitter::handle:vertical:pressed {
-                background-color: rgba(0, 255, 136, 0.5);
+                height: 4px;
             }
         """
         
@@ -242,7 +147,6 @@ class UIStyles:
             UIStyles.get_section_styles() +
             UIStyles.get_text_display_styles() +
             UIStyles.get_scrollbar_styles() +
-            UIStyles.get_keyword_styles() +
             UIStyles.get_info_section_styles() +
             UIStyles.get_scroll_area_styles() +
             UIStyles.get_splitter_style() +
@@ -255,121 +159,71 @@ class WebViewStyles:
     def get_dark_theme_wrapper():
         return """
         <style>
-            body { 
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                background-color: #2f3136 !important; 
-                color: #dcddde !important; 
-                margin: 15px;
-                line-height: 1.6;
+            body {
+                background-color: #2F3136;
+                color: #DCDDDE;
+                font-family: 'Segoe UI', Arial, sans-serif;
                 font-size: 14px;
+                line-height: 1.6;
+                margin: 0;
+                padding: 16px;
             }
-            h1, h2, h3, h4, h5, h6 {
-                color: #ffffff !important;
-                border-bottom: 2px solid rgba(0, 255, 136, 0.3);
-                padding-bottom: 5px;
-                margin-top: 20px;
-                margin-bottom: 10px;
+            
+            ::-webkit-scrollbar {
+                width: 10px;
+                background-color: #2F3136; 
             }
-            p {
-                margin: 10px 0;
-                color: #dcddde !important;
+
+            ::-webkit-scrollbar-thumb {
+                background-color: #5865F2; 
+                border-radius: 5px;
+                border: 2px solid #2F3136;
             }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background-color: #4752C4; 
+            }
+
+            ::-webkit-scrollbar-corner {
+                background: transparent; 
+            }
+            
             a {
-                color: #00d4aa !important;
-                text-decoration: none;
+                color: #00AFF4 !important;
+                text-decoration: none !important;
             }
             a:hover {
-                color: #00FF88 !important;
-                text-decoration: underline;
-            }
-            ul, ol {
-                padding-left: 20px;
-                margin: 10px 0;
-            }
-            li {
-                margin: 5px 0;
-                color: #dcddde !important;
-            }
-            code {
-                background: rgba(0, 0, 0, 0.4) !important;
-                color: #00FF88 !important;
-                padding: 2px 6px;
-                border-radius: 3px;
-                font-family: 'Consolas', 'Courier New', monospace;
-                font-size: 13px;
-            }
-            pre {
-                background: rgba(0, 0, 0, 0.4) !important;
-                color: #dcddde !important;
-                padding: 15px;
-                border-radius: 5px;
-                border-left: 3px solid #00FF88;
-                overflow-x: auto;
-                margin: 15px 0;
-            }
-            blockquote {
-                border-left: 3px solid rgba(0, 255, 136, 0.5);
-                padding-left: 15px;
-                margin: 15px 0;
-                color: #b9bbbe !important;
-                font-style: italic;
-                background: rgba(0, 0, 0, 0.2);
-                padding: 10px 15px;
-                border-radius: 5px;
+                color: #5865F2 !important;
+                text-decoration: underline !important;
             }
             img {
                 max-width: 100%;
                 height: auto;
-                border-radius: 5px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                margin: 10px 0;
+                border-radius: 8px;
             }
-            .highlight {
-                background: rgba(0, 255, 136, 0.2) !important;
-                color: #ffffff !important;
+            p { margin: 0 0 12px 0; }
+            h1, h2, h3, h4, h5, h6 {
+                color: #FFFFFF;
+                margin: 0 0 8px 0;
+            }
+            code {
+                background-color: #202225;
+                color: #F47067;
                 padding: 2px 4px;
                 border-radius: 3px;
+                font-family: 'Consolas', 'Monaco', monospace;
             }
-            .placeholder {
-                text-align: center;
-                opacity: 0.7;
-                margin-top: 30px;
-                padding: 30px;
-                background: rgba(0, 0, 0, 0.2);
-                border-radius: 8px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
+            pre {
+                background-color: #202225;
+                padding: 12px;
+                border-radius: 6px;
+                overflow-x: auto;
             }
-            .loading {
-                text-align: center;
-                margin-top: 40px;
-                padding: 20px;
-                background: rgba(0, 0, 0, 0.2);
-                border-radius: 8px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-            }
-            .spinner {
-                display: inline-block;
-                width: 24px;
-                height: 24px;
-                border: 3px solid rgba(255, 255, 255, 0.2);
-                border-radius: 50%;
-                border-top-color: #00FF88;
-                animation: spin 1s ease-in-out infinite;
-                margin-bottom: 15px;
-            }
-            @keyframes spin {
-                to { transform: rotate(360deg); }
-            }
-            .keyword {
-                color: #00FF88 !important;
-                font-weight: bold;
-            }
-            * {
-                background-color: #2f3136 !important;
-                color: #dcddde !important;
-            }
-            div, span, strong, em, b, i {
-                background: transparent !important;
+            blockquote {
+                border-left: 4px solid #5865F2;
+                margin: 0;
+                padding: 0 0 0 12px;
+                color: #B9BBBE;
             }
         </style>
         """
