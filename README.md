@@ -104,10 +104,7 @@ python -m Hearo.main
 ```
 ### 📷 How to Use
 
-<video width="640" height="360" controls>
-    <source src="https://www.dropbox.com/scl/fi/awkoc36b8ci5muh4tpwbr/demo_video-Made-with-Clipchamp.mp4?rlkey=3aeb8ccd3f4bigd6tm97ey31x&st=62mtyels&raw=1" type="video/mp4">
-    Trình duyệt không hỗ trợ video.
-  </video>
+[Demo](https://www.dropbox.com/scl/fi/awkoc36b8ci5muh4tpwbr/demo_video-Made-with-Clipchamp.mp4?rlkey=3aeb8ccd3f4bigd6tm97ey31x&st=62mtyels&raw=1)
 
 ### 🔒 Security & Privacy
 - STT and keyword extraction are processed locally with Whisper & spaCy.  
