@@ -1,0 +1,11 @@
+soundcard
+numpy==2.2.6
+faster-whisper
+torch
+torchaudio
+feedparser
+spacy
+spacy-stanza
+cachetools
+qtawesome
+aiohttp
