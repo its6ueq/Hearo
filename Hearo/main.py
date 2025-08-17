@@ -2,15 +2,16 @@ import sys
 import ctypes
 import os
 import queue
-
 from PySide6.QtWidgets import QApplication, QMessageBox
-from PySide6.QtCore import Qt, QTimer, QLocale
+from PySide6.QtCore import Qt, QTimer, QLocale, QThreadPool
 from PySide6.QtGui import QIcon
+from PySide6.QtCore import QThreadPool
 
 from .core.transcription_engine import TranscriptionEngine
 from .ui.main_window import ResizableOverlayWindow
 from .core.text_processor import EnhancedTextProcessor
 from .config.app_config import AppConfig
+from .core.worker import Worker
 
 def run_app():
     os.environ['QT_LOGGING_RULES'] = 'qt.widgets.style=false'
@@ -30,9 +31,11 @@ def run_app():
 
     class ApplicationController:
         def __init__(self):
+            self.threadpool = QThreadPool()
             self.engine = None
             self.is_running = False
             self.keyword_history = []
+            self.active_workers = []
             
             print("Đang tải cấu hình...")
             self.config = AppConfig('config.ini')
@@ -105,16 +108,58 @@ def run_app():
             print(f"Yêu cầu thông tin cho từ khóa: {keyword}")
 
             loading_html = f"""
-            <div class='loading'>
+            <div style='display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; font-family: Segoe UI, sans-serif; color: #DCDDDE;'>
+                <style>
+                    .spinner {{
+                        border: 4px solid rgba(255, 255, 255, 0.2);
+                        border-left-color: #5865F2;
+                        border-radius: 50%;
+                        width: 40px;
+                        height: 40px;
+                        animation: spin 1s linear infinite;
+                    }}
+                    @keyframes spin {{
+                        to {{ transform: rotate(360deg); }}
+                    }}
+                </style>
                 <div class='spinner'></div>
-                <p>Đang tải thông tin cho từ khóa '<span class="keyword">{keyword}</span>'...</p>
+                <p style='margin-top: 15px;'>Đang tải thông tin cho '<b>{keyword}</b>'...</p>
             </div>
             """
-            self.main_window.update_ai_info(loading_html)
+            self.main_window.update_ai_info(loading_html) 
 
-            info_html = self.text_processor.get_info_for_keyword(keyword)
+
+            worker = Worker(self.text_processor.get_info_for_keyword, keyword)
+            def cleanup_worker():
+                if worker in self.active_workers:
+                    self.active_workers.remove(worker)
+                    
+            worker.signals.result.connect(self.on_keyword_info_received)
+            worker.signals.error.connect(self.on_keyword_info_error)
+            worker.signals.finished.connect(cleanup_worker)
+
+            self.active_workers.append(worker)
+            self.threadpool.start(worker)
+        
+        def on_keyword_info_received(self, info_html):
+            """Slot này sẽ được gọi khi worker có kết quả"""
+            # <<< THÊM DÒNG NÀY VÀO ĐẦU HÀM >>>
+            print(f"🎉🎉🎉 SLOT on_keyword_info_received ĐÃ ĐƯỢC GỌI! 🎉🎉🎉")
+            
+            # In ra một phần nhỏ của HTML để kiểm tra
+            print(f"   ---> Dữ liệu nhận được (50 ký tự đầu): {info_html[:50]}")
             
             self.main_window.update_ai_info(info_html)
+
+        def on_keyword_info_error(self, error_tuple):
+            """Slot này sẽ được gọi khi worker gặp lỗi"""
+            # In ra thông báo lỗi một cách rõ ràng hơn
+            print("================================ LỖI TỪ WORKER ================================")
+            print(f"Lỗi khi lấy thông tin keyword: {error_tuple[0]} - {error_tuple[1]}")
+            print(error_tuple[2]) # In đầy đủ traceback
+            print("==============================================================================")
+            error_html = "<p style='color: #ED4245;'>Đã xảy ra lỗi khi tải thông tin. Vui lòng thử lại.</p>"
+            self.main_window.update_ai_info(error_html)
 
         def check_transcription_queue(self):
             try:
@@ -135,12 +180,16 @@ def run_app():
                     if last_sentence_list:
                         new_words = self.text_processor.extract_keywords_from_text(last_sentence_list[0])
                         if new_words:
+                            # for word in new_words:
+                            #     if word not in self.keyword_history:
+                            #         print(f"Thêm từ khóa mới: {word}")
+                            #         self.keyword_history.append(word)
                             self.keyword_history.extend(new_words)
                             new_keywords_generated = True
 
                 if new_keywords_generated:
                     MAX_KEYWORDS_TO_DISPLAY = 15
-                    keywords_to_display = self.keyword_history[-MAX_KEYWORDS_TO_DISPLAY:]
+                    keywords_to_display = self.keyword_history[-MAX_KEYWORDS_TO_DISPLAY:][::-1]
                     self.main_window.set_keywords(keywords_to_display)
 
             except queue.Empty:
