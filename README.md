@@ -3,7 +3,7 @@
 
 <div align="center"><a href="#top"></a>
 
-<img src="https://i.postimg.cc/GmXvDNNs/raw-removebg-preview.png" alt="Logo" width="350" height="350">
+<img src="https://i.postimg.cc/GmXvDNNs/raw-removebg-preview.png" alt="Logo" width="300" height="300">
 
 <h1 align="center">Hearo</h1>
 
@@ -23,7 +23,7 @@ Meet <b>Hearo</b> - a real-time meeting companion that transcribes speech with W
   - [🔧 Tech Stack](#-tech-stack)
 - [⚙ Installation](#-installation)
   - [📦 Prerequisites](#-prerequisites)
-  - [▶️ Run with Python (recommended during ideation)](#️-run-with-python-recommended-during-ideation)
+  - [▶️ Run with terminal](#️-run-with-terminal)
   - [📷 How to Use](#-how-to-use)
   - [🔒 Security & Privacy](#-security--privacy)
 - [🖥️ Features and Interfaces](#️-features-and-interfaces)
